@@ -2,6 +2,7 @@
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
     "@ferdiz-afk/baileys": "^6.7.3",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "awesome-phonenumber": "^2.64.0",
     "axios": "^0.24.0",
     "chalk": "^4.1.2",
@@ -16,7 +17,7 @@
     "jsdom": "^16.4.0",
     "ms": "^2.1.3",
     "node-fetch": "^2.6.1",
-    "node-webpmux": "^3.1.0",
+    "node-webpmux": "^3.1.7",
     "os": "^0.1.2",
     "path": "^0.12.7",
     "perf_hooks": "0.0.1",
