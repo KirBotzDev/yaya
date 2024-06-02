@@ -1,5 +1,7 @@
 const { proto, getContentType } = require("@ferdiz-afk/baileys")
 const axios = require("axios")
+const fs = require("fs")
+const FormData = require("form-data")
 
 global.smsg = (akira, msg) => {
 let M = proto.WebMessageInfo
@@ -172,3 +174,90 @@ function updateUrls(obj) {
 }
 
 global.tikVideo = tikVideo
+
+global.fetchJson = async (url, options) => {
+try {
+options ? options : {}
+const res = await axios({
+method: 'GET',
+url: url,
+headers: {
+'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
+},
+...options
+})
+return res.data
+} catch (err) {
+return err
+}
+}
+
+async function uptotelegra (Path) {
+return new Promise (async (resolve, reject) => {
+if (!fs.existsSync(Path)) return reject(new Error("File not Found"))
+try {
+const form = new FormData()
+form.append("file", fs.createReadStream(Path))
+const data = await axios({
+url: "https://telegra.ph/upload",
+method: "POST",
+headers: {
+...form.getHeaders()
+},
+data: form
+})
+return resolve("https://telegra.ph" + data.data[0].src)
+} catch (err) {
+return reject(new Error(String(err)))
+}
+})
+}
+
+global.uptotelegra = uptotelegra
+
+async function remini(img1, img2) {
+  return new Promise(async (img3, img4) => {
+    let img5 = ['enhance', "recolor", "dehaze"]
+    if (img5.includes(img2)) {
+      img2 = img2
+    } else {
+      img2 = img5[0]
+    }
+    let fromdata = new FormData()
+    let UrlWeb = "https://inferenceengine.vyro.ai/" + img2
+    fromdata.append("model_version", 1, {
+      'Content-Transfer-Encoding': "binary",
+      'contentType': "multipart/form-data; charset=uttf-8"
+    })
+    fromdata.append('image', Buffer.from(img1), {
+      'filename': "enhance_image_body.jpg",
+      'contentType': "image/jpeg"
+    })
+    fromdata.submit({
+      'url': UrlWeb,
+      'host': "inferenceengine.vyro.ai",
+      'path': '/' + img2,
+      'protocol': "https:",
+      'headers': {
+        'User-Agent': 'okhttp/4.9.3',
+        'Connection': "Keep-Alive",
+        'Accept-Encoding': "gzip"
+      }
+    }, function (img6, img7) {
+      if (img6) {
+        img4()
+      }
+      let img8 = []
+      img7.on('data', function (img9, img10) {
+        img8.push(img9)
+      }).on("end", () => {
+        img3(Buffer.concat(img8))
+      })
+      img7.on("error", img11 => {
+        img4()
+      })
+    })
+  })
+}
+
+global.remini = remini

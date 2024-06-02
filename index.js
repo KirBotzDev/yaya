@@ -1,7 +1,7 @@
 require("./smsg")
 const useCODE = process.argv.includes("-code")
 const useQR = !useCODE
-const { default: makeWASocket, PHONENUMBER_MCC, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, generateForwardMessageContent, prepareWAMessageMedia, generateWAMessageFromContent, generateMessageID, downloadContentFromMessage, makeInMemoryStore, jidDecode, getAggregateVotesInPollMessage, proto } = require("@ferdiz-afk/baileys")
+const { default: makeWASocket, delay, PHONENUMBER_MCC, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, generateForwardMessageContent, prepareWAMessageMedia, generateWAMessageFromContent, generateMessageID, downloadContentFromMessage, makeInMemoryStore, jidDecode, getAggregateVotesInPollMessage, proto } = require("@ferdiz-afk/baileys")
 const fs = require("fs")
 const pino = require("pino")
 const chalk = require("chalk")

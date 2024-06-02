@@ -22,11 +22,16 @@ const prefix = /^[.#!/^]/.test(body) ? body.match(/^[.#!/^]/gi) : '#'
 const isCmd = body.startsWith(prefix)
 const command = isCmd ? body.slice(prefix.length).trim().split(' ').shift().toLowerCase() : ''
 const from = mek.key.remoteJid
-const isGroup = from.endsWith('@g.us')
-const sender = isGroup ? (mek.key.participant ? mek.key.participant : mek.participant) : mek.key.remoteJid
-const pushname = mek.pushName || "No Name"
 const botNumber = await akira.decodeJid(akira.user.id)
 const isCreator = [botNumber, ...owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(mek.sender)
+const isGroup = from.endsWith('@g.us')
+const sender = isGroup ? (mek.key.participant ? mek.key.participant : mek.participant) : mek.key.remoteJid
+const groupMetadata = isGroup? await akira.groupMetadata(mek.chat).catch(e => {}) : ""
+const pwkdnwn = isGroup? await groupMetadata.participants : ""
+const groupAdmins = isGroup? await pwkdnwn.filter(v => v.admin !== null).map(v => v.id) : ""
+const isBotAdmins = isGroup ? groupAdmins.includes(botNumber) : false
+const isAdmins = isGroup ? groupAdmins.includes(sender) : false
+const pushname = mek.pushName || "No Name"
 const args = body.trim().split(/ +/).slice(1)
 const text = q = args.join(" ")
 const quoted = mek.quoted ? mek.quoted : mek
@@ -56,12 +61,19 @@ case "menu": {
 const textnya = `Hallo Kak @${sender.split("@")[0]}
 
 ╭─▸ *\`List Menu\`*
+│⭔${prefix}add \`[ 628******** ]\`
+│⭔${prefix}kick \`[ 628******** ]\`
+│⭔${prefix}hidetag \`[ pesan text tag ]\`
+│⭔${prefix}openai \`[ chat ai bot ]\`
+│⭔${prefix}tourl \`[ image to url ]\`
 │⭔${prefix}toimg \`[ reply sticker ]\`
 │⭔${prefix}sticker \`[ reply foto/video ]\`
 │⭔${prefix}qc \`[ buat sticker text WA ]\`
 │⭔${prefix}tiktok \`[ unduh video tiktok ]\`
-│⭔${prefix}donasi \`[ donasi buat bot ]\`
-╰────────────˧`
+│⭔${prefix}hd \`[ foto burik -> hight quality ]\`
+╰────────────˧
+
+\`\`\`Note: Semua Fitur Gratis Jangan Lupa Donasi Ya Kak Ketik .donasi\`\`\``
 akira.sendMessage(from, { text: textnya, contextInfo: { mentionedJid: [sender], forwardingScore: 9999999, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: '120363196790225702@newsletter', newsletterName: 'Saluran WhatsApp KirBotz', serverMessageId: -1 }, businessMessageForwardInfo: { businessOwnerJid: owner + "@s.whatsapp.net" }, } }, { quoted: mek })
 }
 break
@@ -144,27 +156,65 @@ let ghd = await akira.sendMessage(from, {video:{url: res.hdplay},caption: `*Suks
 akira.sendMessage(from, {audio:{url: res.music}, mimetype: "audio/mp4", ptt:false},{quoted:ghd})
 }
 break
+case "hidetag": {
+if (!isGroup) return reply("Khusus Dalam Group")
+if (!isAdmins && !isCreator) return reply("Khusus Admin Group")
+if (!isBotAdmins) return reply("Jadikan Bot Sebagai Admin Terlebih Dahulu Jika Ingin Menggunakan Fitur Ini")
+if (!text) return reply("Teks Nya Mana Kak?")
+global.texthidetag = text
+akira.sendMessage(from, { text : global.texthidetag , mentions: pwkdnwn.map(a => a.id)}, { quoted: mek })
+}
+break
+case "kick": {
+if (!isGroup) return reply("Khusus Dalam Group")
+if (!isAdmins && !isOwner) return reply("Khusus Admin Group")
+if (!isBotAdmins) return reply("Jadikan Bot Sebagai Admin Terlebih Dahulu Jika Ingin Menggunakan Fitur Ini")
+const users = mek.quoted ? mek.quoted.sender : text.replace(/[^0-9]/g, '')+'@s.whatsapp.net'
+akira.groupParticipantsUpdate(from, [users], 'remove').then((res) => reply(util.format(res))).catch((err) => reply(util.format(err)))
+}
+break
+case "add": {
+if (!isGroup) return reply("Khusus Dalam Group")
+if (!isAdmins && !isOwner) return reply("Khusus Admin Group")
+if (!isBotAdmins) return reply("Jadikan Bot Sebagai Admin Terlebih Dahulu Jika Ingin Menggunakan Fitur Ini")
+const users = mek.quoted ? mek.quoted.sender : text.replace(/[^0-9]/g, '')+'@s.whatsapp.net'
+akira.groupParticipantsUpdate(from, [users], 'add').then((res) => reply(util.format(res))).catch((err) => reply(util.format(err)))
+}
+break
+case "openai": {
+if (!q) return reply(`Pertanyaan Nya Apa Bang?`)
+let gpt4 = await fetchJson("https://aemt.me/gpt4?text=" + q)
+reply(util.format(gpt4.result))
+}
+break
+case "tourl": {
+try {
+let mee = await akira.downloadAndSaveMediaMessage(quoted)
+let mem = await uptotelegra(mee)
+reply(util.format(mem))
+} catch (err) {
+reply(`Reply Image Nya Bang`)
+}
+}
+break
+case "hd": {
+if (!/image/.test(mime)) return reply("Reply Foto Nya Dengan Teks " + prefix + command)
+const media = await quoted.download()
+const proses = await remini(media, "enhance")
+akira.sendMessage(from, { image: proses, caption: "Sukses Kak" }, { quoted: mek })
+}
+break
 default:
 }
-} catch (err) {
-console.log(util.format(err))
-let e = String(err)
-akira.sendMessage("6287705048235@s.whatsapp.net", { text: "Hallo Owner Sepertinya Ada Yang Error Harap Di Perbaiki " + util.format(e), 
-contextInfo:{
-forwardingScore: 5, 
-isForwarded: true
-}})
+} catch (e) {
+console.log(util.format(e))
 }
 }
-
-process.on('uncaughtException', function (err) {
-console.log('Caught exception: ', err)
-})
 
 const file = require.resolve(__filename)
 fs.watchFile(file, () => {
-  fs.unwatchFile(file)
-  console.log(chalk.redBright(`Update File ${__filename}`))
-  delete require.cache[file]
-  require(file)
+fs.unwatchFile(file)
+console.log(chalk.redBright(`Update File ${__filename}`))
+delete require.cache[file]
+require(file)
 })
